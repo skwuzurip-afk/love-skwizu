@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#ffd6e8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 28S3 20 3 11.5A7.5 7.5 0 0 1 16 7a7.5 7.5 0 0 1 13 4.5C29 20 16 28 16 28z' fill='%23ff5c9d'/%3E%3C/svg%3E">
+<title>Маленький вопрос для тебя 💕</title>
+<style>
+  :root{
+    --pink-1:#fff0f6;
+    --pink-2:#ffd6e8;
+    --pink-3:#ffb3d1;
+    --pink-4:#ff8fbb;
+    --pink-5:#ff5c9d;
+    --ink:#7a2f52;
+    --ink-soft:#b06286;
+    --card:#ffffffcc;
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  html,body{
+    height:100%; margin:0; padding:0;
+    overflow:hidden; overscroll-behavior:none;
+    position:fixed; inset:0; width:100%;
+    touch-action:none;
+    user-select:none; -webkit-user-select:none;
+  }
+
+  body{
+    font-family:"Trebuchet MS","Segoe UI",Verdana,Arial,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 700px at 12% 8%,  #fff6fb 0%, rgba(255,246,251,0) 60%),
+      radial-gradient(900px 700px at 88% 18%,  #ffe3f0 0%, rgba(255,227,240,0) 55%),
+      radial-gradient(1000px 800px at 50% 110%,#ffc7de 0%, rgba(255,199,222,0) 60%),
+      linear-gradient(160deg, #fff2f8 0%, #ffdceb 45%, #ffc2dc 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    position:relative;
+  }
+
+  /* ---------- фон: плавающие сердечки ---------- */
+  #hearts{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+  }
+
+  /* мягкие светящиеся пятна */
+  .blob{
+    position:fixed; border-radius:50%; filter:blur(60px); opacity:.5;
+    pointer-events:none; z-index:0;
+    animation:drift 18s ease-in-out infinite;
+  }
+  .blob.b1{ width:340px; height:340px; left:-90px; top:6%;  background:#ffc0dd; }
+  .blob.b2{ width:280px; height:280px; right:-70px; bottom:4%; background:#ffd9a8; animation-delay:-6s; }
+  .blob.b3{ width:220px; height:220px; left:55%; top:-70px; background:#ffe0ef; animation-delay:-11s; }
+
+  @keyframes drift{
+    0%,100%{ transform:translate3d(0,0,0) scale(1); }
+    33%    { transform:translate3d(28px,-24px,0) scale(1.08); }
+    66%    { transform:translate3d(-22px,18px,0) scale(.94); }
+  }
+
+  /* ---------- карточка ---------- */
+  .stage{
+    position:relative; z-index:3;
+    display:flex; align-items:center; justify-content:center;
+    width:100%; height:100%;
+  }
+
+  .card{
+    width:min(560px, calc(100vw - 28px));
+    padding:34px 28px 30px;
+    border-radius:34px;
+    background:linear-gradient(180deg, #ffffffee 0%, #fff5faee 100%);
+    border:2px solid #ffffff;
+    box-shadow:
+      0 26px 60px rgba(214, 79, 141, .28),
+      0 4px 0 #ffffff inset,
+      0 0 0 10px #ffffff55;
+    text-align:center;
+    animation:pop .7s cubic-bezier(.2,1.3,.4,1) both;
+    transform-origin:50% 50%;
+    flex:0 0 auto;
+    /* ВАЖНО: никакого backdrop-filter / filter / perspective здесь быть не должно —
+       они делают карточку «содержащим блоком» для position:fixed,
+       и кнопка «нет» улетала бы за край экрана */
+  }
+
+  @keyframes pop{
+    from{ opacity:0; transform:translateY(26px) scale(.92); }
+    to  { opacity:1; transform:none; }
+  }
+
+  .emoji-top{
+    font-size:52px; line-height:1;
+    display:inline-block;
+    animation:bounce 2.4s ease-in-out infinite;
+    filter:drop-shadow(0 6px 10px rgba(255,92,157,.35));
+  }
+  @keyframes bounce{
+    0%,100%{ transform:translateY(0) rotate(-4deg); }
+    50%    { transform:translateY(-10px) rotate(4deg); }
+  }
+
+  .kicker{
+    margin:16px 0 6px;
+    font-size:13px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--pink-5); font-weight:bold;
+  }
+
+  h1{
+    margin:0 0 26px;
+    font-size:clamp(26px, 6.4vw, 40px);
+    line-height:1.18;
+    color:var(--ink);
+    text-shadow:0 2px 0 #fff, 0 6px 18px rgba(255,92,157,.18);
+  }
+
+  .buttons{
+    display:flex; gap:16px; align-items:center; justify-content:center;
+    flex-wrap:wrap;
+    min-height:96px;
+    position:relative;
+  }
+
+
+  button{
+    font-family:inherit;
+    border:none; cursor:pointer;
+    border-radius:999px;
+    font-weight:bold;
+    touch-action:manipulation;
+    /* ВАЖНО: left/top тут анимировать нельзя — иначе кнопка «нет»
+       при телепортации «вылетает» за край экрана (кривая Безье с overshoot) */
+    transition:transform .18s cubic-bezier(.2,1.4,.4,1), box-shadow .18s, background .3s, opacity .3s;
+    will-change:transform;
+  }
+
+  .yes{
+    padding:17px 38px;
+    font-size:19px;
+    color:#fff;
+    background:linear-gradient(135deg, #ff7ab0 0%, #ff4d94 55%, #f9418b 100%);
+    box-shadow:0 12px 26px rgba(255,77,148,.45), 0 -3px 0 #ffffff55 inset;
+    transform:scale(var(--scale,1));
+    position:relative; z-index:2;
+  }
+  .yes:hover{ filter:brightness(1.06); }
+  .yes:active{ transform:scale(calc(var(--scale,1) * .94)); }
+
+  .yes::after{
+    content:""; position:absolute; inset:-8px; border-radius:999px;
+    border:2px solid #ff9ec6; opacity:0; animation:ring 2.2s ease-out infinite;
+  }
+  @keyframes ring{
+    0%  { transform:scale(.9); opacity:.7; }
+    100%{ transform:scale(1.25); opacity:0; }
+  }
+
+  /* placeholder, чтобы «Да» всегда стояла по центру карточки */
+  .no-slot{ display:inline-block; flex:0 0 auto; }
+
+  .no{
+    padding:15px 30px;
+    font-size:17px;
+    color:#c96a94;
+    background:#fff;
+    border:2px dashed #ffb3d1;
+    box-shadow:0 8px 18px rgba(214,79,141,.16);
+    position:absolute;      /* стоит ровно на месте своего слота */
+    z-index:6;
+    margin:0;
+  }
+  .no.fixed{ position:fixed; z-index:6; }   /* после телепорта прыгает по всему экрану */
+  .no.fixed:hover{ transform:scale(1.04); }
+
+  /* ---------- финальный экран ---------- */
+  .win{
+    position:fixed; inset:0; z-index:10;
+    display:none;
+    padding:14px;
+    background:radial-gradient(900px 700px at 50% 30%, #fff2f8 0%, #ffd7e9 45%, #ffbcd8 100%);
+  }
+  .win.on{ display:flex; align-items:center; justify-content:center; }
+
+  .win-card{
+    width:min(600px, calc(100vw - 28px));
+    padding:26px 24px 24px;
+    border-radius:36px;
+    text-align:center;
+    background:linear-gradient(180deg,#ffffffee,#fff6faee);
+    border:2px solid #fff;
+    box-shadow:0 30px 70px rgba(214,79,141,.32), 0 0 0 10px #ffffff55;
+    animation:winIn .8s cubic-bezier(.2,1.35,.35,1) both;
+    transform-origin:50% 50%;
+    flex:0 0 auto;
+    /* масштаб подгонки под экран живёт в переменной, чтобы анимация
+       появления его не затирала */
+    transform:scale(var(--fit, 1));
+  }
+  @keyframes winIn{
+    from{ opacity:0; transform:translateY(40px) scale(calc(var(--fit, 1) * .85)) rotate(-2deg); }
+    to  { opacity:1; transform:scale(var(--fit, 1)) rotate(0deg); }
+  }
+
+  .cat-wrap{
+    width:min(240px, 54vw, 34dvh); margin:0 auto 4px;
+    animation:catFloat 3.4s ease-in-out infinite;
+    filter:drop-shadow(0 18px 26px rgba(255,92,157,.35));
+  }
+  @keyframes catFloat{
+    0%,100%{ transform:translateY(0) rotate(-1.5deg); }
+    50%    { transform:translateY(-14px) rotate(1.5deg); }
+  }
+  .cat-wrap svg{ width:100%; height:auto; display:block; }
+
+  .win h2{
+    margin:6px 0 4px;
+    font-size:clamp(30px,8vw,50px);
+    line-height:1;
+    color:#ff4d94;
+    text-shadow:0 3px 0 #fff, 0 10px 26px rgba(255,77,148,.35);
+    animation:cheer 1.6s ease-in-out infinite;
+  }
+  @keyframes cheer{
+    0%,100%{ transform:scale(1) rotate(-1deg); }
+    50%    { transform:scale(1.06) rotate(1deg); }
+  }
+
+  .win p{
+    margin:0 auto 8px; max-width:44ch;
+    font-size:clamp(13.5px,3.5vw,16.5px); line-height:1.5; color:var(--ink-soft);
+  }
+  .win .big{
+    color:var(--ink); font-weight:bold; font-size:clamp(15px,4vw,18px);
+  }
+
+  .stamp{
+    display:inline-block; margin:12px 0 4px;
+    padding:9px 20px; border-radius:999px;
+    background:#fff; border:2px dashed var(--pink-4);
+    color:#e0447f; font-weight:bold; font-size:13.5px;
+    letter-spacing:.04em;
+    transform:rotate(-2deg);
+    box-shadow:0 8px 18px rgba(214,79,141,.16);
+  }
+
+  .again{
+    margin-top:14px;
+    padding:12px 24px; font-size:14.5px;
+    color:#c96a94; background:#fff; border:2px solid #ffc4dd;
+    box-shadow:0 8px 18px rgba(214,79,141,.16);
+  }
+  .again:hover{ background:#fff0f6; }
+
+  /* ---------- экран-пароль: дата отношений ---------- */
+  .gate{
+    position:fixed; inset:0; z-index:10;
+    display:none; padding:14px;
+    background:radial-gradient(900px 700px at 50% 30%, #fff2f8 0%, #ffd7e9 45%, #ffbcd8 100%);
+  }
+  .gate.on{ display:flex; align-items:center; justify-content:center; }
+
+  .gate-card{
+    width:min(560px, calc(100vw - 28px));
+    padding:28px 24px 24px;
+    border-radius:34px;
+    text-align:center;
+    background:linear-gradient(180deg,#ffffffee,#fff6faee);
+    border:2px solid #fff;
+    box-shadow:0 30px 70px rgba(214,79,141,.32), 0 0 0 10px #ffffff55;
+    transform-origin:50% 50%;
+    flex:0 0 auto;
+    transform:scale(var(--fit, 1));
+    animation:gateIn .7s cubic-bezier(.2,1.35,.35,1) both;
+  }
+  @keyframes gateIn{
+    from{ opacity:0; transform:translateY(30px) scale(calc(var(--fit, 1) * .9)) rotate(-1.5deg); }
+    to  { opacity:1; transform:scale(var(--fit, 1)) rotate(0deg); }
+  }
+  .gate-card.shake{ animation:shake .5s ease both; }
+  @keyframes shake{
+    0%,100%{ transform:scale(var(--fit, 1)) translateX(0); }
+    20%{ transform:scale(var(--fit, 1)) translateX(-10px) rotate(-1deg); }
+    40%{ transform:scale(var(--fit, 1)) translateX(9px)  rotate(1deg); }
+    60%{ transform:scale(var(--fit, 1)) translateX(-6px); }
+    80%{ transform:scale(var(--fit, 1)) translateX(5px); }
+  }
+  .gate-card h1{ margin-bottom:10px; }
+  .gate-text{
+    margin:0 auto 4px; max-width:40ch;
+    font-size:clamp(14px,3.6vw,16.5px); line-height:1.55; color:var(--ink-soft);
+  }
+  .date-row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:16px 0 2px; }
+  select{
+    font-family:inherit; font-weight:bold; font-size:16px; color:var(--ink);
+    background:#fff; border:2px dashed var(--pink-3); border-radius:16px;
+    padding:12px 26px 12px 12px; min-width:92px;
+    text-align:center; text-align-last:center;
+    appearance:none; -webkit-appearance:none; cursor:pointer; outline:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23ff5c9d' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 10px center; background-size:12px;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  select:focus{ border-color:var(--pink-5); box-shadow:0 0 0 4px #ff9ec633; }
+  .gate-msg{ min-height:22px; margin:12px 0 2px; color:#e0447f; font-weight:bold; font-size:14.5px; }
+  .gate-hint{ min-height:18px; margin:10px 0 0; color:#d98fb2; font-size:13px; }
+  .check{
+    margin-top:12px; padding:15px 34px; font-size:17px; color:#fff;
+    background:linear-gradient(135deg,#ff7ab0 0%,#ff4d94 55%,#f9418b 100%);
+    box-shadow:0 12px 26px rgba(255,77,148,.45), 0 -3px 0 #ffffff55 inset;
+  }
+  .check:active{ transform:scale(.95); }
+
+  @media (max-width:420px){
+    .gate-card{ padding:22px 16px 20px; border-radius:28px; }
+    select{ min-width:78px; padding:11px 24px 11px 10px; font-size:15px; }
+  }
+
+  /* сердечки-взрыв при нажатии "да" */
+  .burst{
+    position:fixed; z-index:20; pointer-events:none;
+    font-size:22px; animation:burst 1.1s ease-out forwards;
+  }
+  @keyframes burst{
+    0%  { opacity:1; transform:translate(-50%,-50%) scale(.4) rotate(0); }
+    100%{ opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.5) rotate(var(--rot)); }
+  }
+
+  @media (max-width:420px){
+    .card{ padding:26px 18px 22px; border-radius:28px; }
+    .win-card{ padding:22px 18px 20px; border-radius:28px; }
+    .emoji-top{ font-size:44px; }
+    .kicker{ margin:12px 0 4px; font-size:11.5px; letter-spacing:.18em; }
+    .buttons{ gap:12px; min-height:88px; }
+    .yes{ padding:16px 30px; font-size:18px; }
+    .no{ padding:14px 24px; font-size:16px; }
+  }
+
+  /* совсем низкий экран (ландшафт телефона) */
+  @media (max-height:480px){
+    .emoji-top{ display:none; }
+    .kicker{ margin:6px 0 2px; }
+    h1{ margin-bottom:14px; }
+    .buttons{ min-height:70px; }
+    .cat-wrap{ width:min(150px, 30vw, 30dvh); }
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+<div class="blob b3"></div>
+
+<canvas id="hearts"></canvas>
+
+<main class="stage">
+  <div class="card" id="card">
+    <span class="emoji-top" aria-hidden="true">🌷</span>
+    <div class="kicker">особенное послание</div>
+    <h1>Ты пойдёшь со мной<br>на свидание?</h1>
+
+    <div class="buttons">
+      <button class="yes" id="yes">Да 💖</button>
+      <span class="no-slot" id="noSlot" aria-hidden="true"></span>
+    </div>
+  </div>
+</main>
+
+<!-- кнопка «нет» живёт ВНЕ карточки, чтобы position:fixed считался от экрана -->
+<button class="no" id="no">Нет</button>
+
+<!-- финальный экран -->
+<section class="win" id="win" aria-live="polite">
+  <div class="stage">
+    <div class="win-card" id="winCard">
+      <div class="cat-wrap" id="catWrap"></div>
+      <h2>Урааа! 🎉</h2>
+      <p class="big">Я так рад(а)! Сердце сейчас выпрыгнет 💓</p>
+      <p>Самое главное — провести время вместе и подарить друг другу побольше улыбок 🌸</p>
+      <div class="stamp">Свидание подтверждено ✔️</div>
+      <p style="margin-top:10px">Жду не дождусь 🥰</p>
+      <button class="again" id="again">Показать ещё раз ↺</button>
+    </div>
+  </div>
+</section>
+
+<!-- экран-пароль: дата начала отношений -->
+<section class="gate" id="gate" aria-live="polite">
+  <div class="stage">
+    <div class="gate-card" id="gateCard">
+      <span class="emoji-top" aria-hidden="true">🔐</span>
+      <div class="kicker">почти у цели</div>
+      <h1>Секретный пароль</h1>
+      <p class="gate-text">Введи дату наших отношений — когда мы начали встречаться 💞</p>
+      <div class="date-row">
+        <select id="dSel" aria-label="число"></select>
+        <select id="mSel" aria-label="месяц"></select>
+        <select id="ySel" aria-label="год"></select>
+      </div>
+      <p class="gate-msg" id="gateMsg"></p>
+      <button class="check" id="checkBtn">Открыть 💗</button>
+      <p class="gate-hint" id="gateHint"></p>
+    </div>
+  </div>
+</section>
+
+<script>
+/* =========================================================
+   1. ФОН — плавающие сердечки, блёстки и облачка
+   ========================================================= */
+const canvas = document.getElementById('hearts');
+const ctx = canvas.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+function heartPath(c, s){
+  c.beginPath();
+  c.moveTo(0, s * 0.32);
+  c.bezierCurveTo(0, s * 0.05, -s * 0.5, -s * 0.05, -s * 0.5, s * 0.32);
+  c.bezierCurveTo(-s * 0.5, s * 0.62, -s * 0.15, s * 0.82, 0, s * 1.05);
+  c.bezierCurveTo(s * 0.15, s * 0.82, s * 0.5, s * 0.62, s * 0.5, s * 0.32);
+  c.bezierCurveTo(s * 0.5, -s * 0.05, 0, s * 0.05, 0, s * 0.32);
+  c.closePath();
+}
+
+const PALETTE = ['#ff9ec6','#ff7ab0','#ffc2dc','#ff5c9d','#ffd9a8','#ffffff'];
+const KINDS   = ['heart','heart','heart','heart','sparkle','petal'];
+
+const items = [];
+function makeItem(first){
+  const kind = KINDS[Math.floor(Math.random() * KINDS.length)];
+  return {
+    kind,
+    x: Math.random() * W,
+    y: first ? Math.random() * H : H + 40,
+    size: kind === 'sparkle' ? 3 + Math.random() * 5 : 9 + Math.random() * 22,
+    speed: 18 + Math.random() * 42,          // px в секунду
+    sway: 12 + Math.random() * 38,
+    phase: Math.random() * Math.PI * 2,
+    rot: Math.random() * Math.PI * 2,
+    spin: (Math.random() - 0.5) * 1.2,
+    alpha: 0.25 + Math.random() * 0.55,
+    color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
+    pulse: Math.random() * Math.PI * 2
+  };
+}
+function seed(){
+  items.length = 0;
+  const count = Math.max(26, Math.min(64, Math.round(W * H / 22000)));
+  for(let i = 0; i < count; i++) items.push(makeItem(true));
+}
+seed();
+window.addEventListener('resize', seed);
+
+let last = performance.now();
+function frame(now){
+  const dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  ctx.clearRect(0, 0, W, H);
+
+  for(const it of items){
+    it.y -= it.speed * dt;
+    it.phase += dt * 1.1;
+    it.rot += it.spin * dt;
+    it.pulse += dt * 2.4;
+
+    if(it.y < -60){
+      Object.assign(it, makeItem(false));
+      continue;
+    }
+
+    const x = it.x + Math.sin(it.phase) * it.sway;
+    const a = it.alpha * (0.75 + 0.25 * Math.sin(it.pulse));
+
+    ctx.save();
+    ctx.translate(x, it.y);
+    ctx.rotate(it.rot);
+    ctx.globalAlpha = a;
+
+    if(it.kind === 'heart'){
+      ctx.fillStyle = it.color;
+      ctx.shadowColor = it.color;
+      ctx.shadowBlur = 12;
+      heartPath(ctx, it.size);
+      ctx.fill();
+      // маленький блик
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = a * 0.5;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.ellipse(-it.size * 0.2, it.size * 0.28, it.size * 0.09, it.size * 0.14, -0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    else if(it.kind === 'sparkle'){
+      ctx.strokeStyle = it.color;
+      ctx.lineWidth = 1.6;
+      ctx.shadowColor = it.color; ctx.shadowBlur = 8;
+      const s = it.size * (1 + 0.25 * Math.sin(it.pulse));
+      ctx.beginPath();
+      ctx.moveTo(-s, 0); ctx.lineTo(s, 0);
+      ctx.moveTo(0, -s); ctx.lineTo(0, s);
+      ctx.moveTo(-s * .55, -s * .55); ctx.lineTo(s * .55, s * .55);
+      ctx.moveTo(-s * .55,  s * .55); ctx.lineTo(s * .55, -s * .55);
+      ctx.stroke();
+    }
+    else { // лепесток
+      ctx.fillStyle = it.color;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, it.size * 0.42, it.size * 0.78, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* =========================================================
+   2. МИЛЫЙ КОТИК (чистый SVG, работает без интернета)
+   ========================================================= */
+document.getElementById('catWrap').innerHTML = `
+<svg viewBox="0 0 320 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Милый розовый котик">
+  <defs>
+    <linearGradient id="fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff7fa"/><stop offset="1" stop-color="#ffd3e6"/>
+    </linearGradient>
+    <linearGradient id="earIn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffb0cf"/><stop offset="1" stop-color="#ff8cb8"/>
+    </linearGradient>
+    <radialGradient id="cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#ff87b6" stop-opacity=".75"/><stop offset="1" stop-color="#ff87b6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- тень -->
+  <ellipse cx="160" cy="286" rx="96" ry="12" fill="#e58cb4" opacity=".22"/>
+
+  <!-- хвост -->
+  <path d="M243 236c34-6 46-38 30-62-9-14-30-16-36-2" stroke="url(#fur)" stroke-width="20"
+        stroke-linecap="round" fill="none"/>
+
+  <!-- тело -->
+  <path d="M160 150c46 0 78 34 78 78 0 26-24 40-78 40s-78-14-78-40c0-44 32-78 78-78z" fill="url(#fur)"/>
+  <!-- грудка -->
+  <ellipse cx="160" cy="234" rx="34" ry="30" fill="#fffafc" opacity=".85"/>
+  <!-- лапки -->
+  <ellipse cx="128" cy="262" rx="19" ry="12" fill="#fff7fa"/>
+  <ellipse cx="192" cy="262" rx="19" ry="12" fill="#fff7fa"/>
+
+  <!-- ушки -->
+  <path d="M96 84 84 30l56 26z" fill="url(#fur)"/>
+  <path d="M224 84 236 30l-56 26z" fill="url(#fur)"/>
+  <path d="M100 76 93 44l33 16z" fill="url(#earIn)"/>
+  <path d="M220 76 227 44l-33 16z" fill="url(#earIn)"/>
+
+  <!-- голова -->
+  <ellipse cx="160" cy="118" rx="78" ry="66" fill="url(#fur)"/>
+
+  <!-- щёчки -->
+  <ellipse cx="112" cy="140" rx="20" ry="13" fill="url(#cheek)"/>
+  <ellipse cx="208" cy="140" rx="20" ry="13" fill="url(#cheek)"/>
+
+  <!-- глаза (закрытые, счастливые) -->
+  <path d="M120 116c8-11 22-11 30 0" stroke="#7a2f52" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M170 116c8-11 22-11 30 0" stroke="#7a2f52" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <!-- реснички -->
+  <path d="M118 112l-7-6M202 112l7-6" stroke="#7a2f52" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- носик и улыбка -->
+  <path d="M160 136l-7-6h14z" fill="#ff6fa5"/>
+  <path d="M160 138c0 8-8 12-14 8M160 138c0 8 8 12 14 8" stroke="#7a2f52" stroke-width="4.5"
+        stroke-linecap="round" fill="none"/>
+
+  <!-- усики -->
+  <g stroke="#e79cbd" stroke-width="3" stroke-linecap="round" opacity=".9">
+    <path d="M104 138 72 130M104 146 72 148M216 138l32-8M216 146l32 2"/>
+  </g>
+
+  <!-- сердечко в лапках -->
+  <g transform="translate(160 214)">
+    <path d="M0 6c0-7-13-7-13 2 0 8 13 15 13 20 0-5 13-12 13-20 0-9-13-9-13-2z" fill="#ff4d94"/>
+    <circle cx="-5" cy="4" r="2.4" fill="#fff" opacity=".7"/>
+  </g>
+
+  <!-- бантик на ушке -->
+  <g transform="translate(104 62)">
+    <path d="M0 0-14-9v18z" fill="#ff6fa5"/>
+    <path d="M0 0 14-9v18z" fill="#ff6fa5"/>
+    <circle cx="0" cy="0" r="4.5" fill="#ffd6e8"/>
+  </g>
+</svg>`;
+
+/* =========================================================
+   3. КНОПКА «НЕТ» — телепортируется
+   ========================================================= */
+const yesBtn  = document.getElementById('yes');
+const noBtn   = document.getElementById('no');
+const noSlot  = document.getElementById('noSlot');
+const win     = document.getElementById('win');
+const card    = document.getElementById('card');
+const winCard = document.getElementById('winCard');
+
+/* пока «нет» не телепортировалась — она стоит ровно на своём месте в карточке */
+function syncNo(){
+  if(escaped) return;
+  const r = noSlot.getBoundingClientRect();
+  noSlot.style.width  = noBtn.offsetWidth  + 'px';
+  noSlot.style.height = noBtn.offsetHeight + 'px';
+  const r2 = noSlot.getBoundingClientRect();
+  noBtn.style.left = (r2.left + (r2.width  - noBtn.offsetWidth)  / 2) + 'px';
+  noBtn.style.top  = (r2.top  + (r2.height - noBtn.offsetHeight) / 2) + 'px';
+}
+
+/* =========================================================
+   АВТОПОДГОНКА: открытка всегда целиком помещается на экране
+   (работает на любом телефоне, планшете и мониторе,
+    при повороте экрана и при любой высоте окна)
+   ========================================================= */
+function fitTo(el, pad){
+  if(!el) return;
+  /* меряем «чистый» размер карточки: offsetWidth/offsetHeight не зависят
+     ни от transform, ни от анимаций появления — значит всё стабильно */
+  el.style.removeProperty('--fit');
+  const w  = el.offsetWidth  || 1;
+  const h  = el.offsetHeight || 1;
+  const vw = window.visualViewport ? window.visualViewport.width  : window.innerWidth;
+  const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const k  = Math.min((vw - pad * 2) / w, (vh - pad * 2) / h, 1);
+  const s  = Math.max(k, 0.4);                    /* не мельчим до нечитаемого */
+
+  if(el === winCard || el === gateCard){
+    /* у финальной карточки transform занят анимацией появления ->
+       кладём масштаб в CSS-переменную */
+    el.style.setProperty('--fit', s.toFixed(3));
+  }else{
+    el.style.transform = 'scale(' + s.toFixed(3) + ')';
+  }
+}
+function fitAll(){
+  fitTo(card,     16);
+  fitTo(winCard,  16);
+  fitTo(gateCard, 16);
+  syncNo();
+}
+
+let attempts = 0;
+let scale = 1;
+let escaped = false;
+
+/* кнопка «нет» спокойно стоит на месте,
+   а телепортируется ТОЛЬКО когда по ней кликнули */
+function teleport(){
+  attempts++;
+
+  /* «да» потихоньку растёт */
+  scale = Math.min(scale + 0.16, 2.4);
+  yesBtn.style.setProperty('--scale', scale.toFixed(2));
+
+  /* в первый раз переводим кнопку в fixed — теперь она может прыгать
+     по всему экрану (считается от окна, а не от карточки) */
+  if(!escaped){
+    escaped = true;
+    const rect = noBtn.getBoundingClientRect();
+    noBtn.classList.add('fixed');
+    noBtn.style.transition = 'none';
+    noBtn.style.left = rect.left + 'px';
+    noBtn.style.top  = rect.top  + 'px';
+    void noBtn.offsetWidth;                 /* фиксируем стартовую точку */
+    noBtn.style.transition = '';
+  }
+
+  /* считаем по РЕАЛЬНЫМ размерам на экране (кнопка «да» может быть увеличена,
+     а карточка — отмасштабирована), чтобы «нет» всегда была видна целиком */
+  const pad = 12;
+  const vw  = window.innerWidth;
+  const vh  = window.innerHeight;
+  const nr  = noBtn.getBoundingClientRect();
+  const w   = Math.max(nr.width,  1);
+  const h   = Math.max(nr.height, 1);
+  const yr  = yesBtn.getBoundingClientRect();
+
+  const minX = pad, maxX = Math.max(minX, vw - w - pad);
+  const minY = pad, maxY = Math.max(minY, vh - h - pad);
+
+  let x, y, guard = 0;
+  do{
+    x = minX + Math.random() * (maxX - minX);
+    y = minY + Math.random() * (maxY - minY);
+    guard++;
+  } while(guard < 60 && (
+      x < yr.right + 24 && x + w > yr.left - 24 &&
+      y < yr.bottom + 24 && y + h > yr.top - 24
+  ));
+
+  /* гарантированно в пределах экрана */
+  x = Math.min(Math.max(x, minX), maxX);
+  y = Math.min(Math.max(y, minY), maxY);
+
+  /* мгновенный прыжок без анимации — настоящая телепортация */
+  noBtn.style.transition = 'none';
+  noBtn.style.left = x + 'px';
+  noBtn.style.top  = y + 'px';
+  noBtn.style.transform = 'scale(.55) rotate(16deg)';
+  noBtn.style.opacity = '.25';
+  void noBtn.offsetWidth;
+  noBtn.style.transition = '';
+  noBtn.style.transform = '';
+  noBtn.style.opacity = '';
+
+  /* не даём странице прокрутиться / уехать */
+  window.scrollTo(0, 0);
+}
+
+function block(e){
+  if(e) e.preventDefault();
+  teleport();
+  return false;
+}
+
+noBtn.addEventListener('click',      block);
+noBtn.addEventListener('touchstart', block, {passive:false});
+noBtn.addEventListener('touchend',   block, {passive:false});
+noBtn.addEventListener('mousedown',  (e) => e.preventDefault());
+
+/* если экран изменился — держим кнопку в пределах видимости */
+function clampNo(){
+  if(!escaped) return;
+  const pad = 12;
+  const nr = noBtn.getBoundingClientRect();
+  const maxX = Math.max(pad, window.innerWidth  - nr.width  - pad);
+  const maxY = Math.max(pad, window.innerHeight - nr.height - pad);
+  noBtn.style.transition = 'none';
+  noBtn.style.left = Math.min(Math.max(pad, parseFloat(noBtn.style.left) || pad), maxX) + 'px';
+  noBtn.style.top  = Math.min(Math.max(pad, parseFloat(noBtn.style.top)  || pad), maxY) + 'px';
+  void noBtn.offsetWidth;
+  noBtn.style.transition = '';
+}
+
+window.addEventListener('resize', () => { window.scrollTo(0, 0); fitAll(); clampNo(); });
+window.addEventListener('orientationchange', () => setTimeout(() => { fitAll(); clampNo(); }, 250));
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', () => { fitAll(); clampNo(); });
+}
+
+/* на всякий случай запрещаем любую прокрутку */
+document.addEventListener('touchmove', (e) => e.preventDefault(), {passive:false});
+document.addEventListener('wheel',     (e) => e.preventDefault(), {passive:false});
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+/* =========================================================
+   4. КНОПКА «ДА» — взрыв сердечек и финал
+   ========================================================= */
+function burst(x, y, n = 26){
+  const emo = ['💖','💕','🌸','💗','✨','🩷','🌷'];
+  for(let i = 0; i < n; i++){
+    const el = document.createElement('span');
+    el.className = 'burst';
+    el.textContent = emo[Math.floor(Math.random() * emo.length)];
+    const ang = Math.random() * Math.PI * 2;
+    const dist = 70 + Math.random() * 190;
+    el.style.setProperty('--dx',  Math.cos(ang) * dist + 'px');
+    el.style.setProperty('--dy', (Math.sin(ang) * dist - 50) + 'px');
+    el.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+    el.style.left = x + 'px';
+    el.style.top  = y + 'px';
+    el.style.fontSize = (16 + Math.random() * 22) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1200);
+  }
+}
+
+function heartRain(n = 40){
+  for(let i = 0; i < n; i++){
+    setTimeout(() => {
+      const el = document.createElement('span');
+      el.className = 'burst';
+      el.textContent = ['💗','💖','🌸','🩷','✨'][Math.floor(Math.random() * 5)];
+      el.style.left = Math.random() * window.innerWidth + 'px';
+      el.style.top  = -20 + 'px';
+      el.style.fontSize = (18 + Math.random() * 26) + 'px';
+      el.style.setProperty('--dx', (Math.random() * 160 - 80) + 'px');
+      el.style.setProperty('--dy', (window.innerHeight + 120) + 'px');
+      el.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+      el.style.animationDuration = (1.6 + Math.random() * 1.4) + 's';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3200);
+    }, i * 70);
+  }
+}
+
+yesBtn.addEventListener('click', (e) => {
+  const r = yesBtn.getBoundingClientRect();
+  burst(r.left + r.width / 2, r.top + r.height / 2, 30);
+
+  yesBtn.style.transform = 'scale(1.3)';
+  yesBtn.style.opacity = '0';
+  noBtn.style.opacity = '0';
+  noBtn.style.pointerEvents = 'none';
+  card.style.transition = 'opacity .45s, transform .45s';
+  card.style.opacity = '0';
+  card.style.transform = 'scale(.9) translateY(10px)';
+
+  setTimeout(() => {
+    card.style.display = 'none';
+    gate.classList.add('on');
+    fitTo(gateCard, 16);         /* подгоняем экран-пароль под размер окна */
+  }, 420);
+});
+
+/* =========================================================
+   5. ПАРоль — дата начала отношений
+   ========================================================= */
+const gate      = document.getElementById('gate');
+const gateCard  = document.getElementById('gateCard');
+const dSel      = document.getElementById('dSel');
+const mSel      = document.getElementById('mSel');
+const ySel      = document.getElementById('ySel');
+const gateMsg   = document.getElementById('gateMsg');
+const gateHint  = document.getElementById('gateHint');
+const checkBtn  = document.getElementById('checkBtn');
+
+const MONTHS = ['январь','февраль','март','апрель','май','июнь',
+                'июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+const SECRET = { d:19, m:10, y:2026 };      /* единственно верная дата */
+
+const WRONG_MSGS = [
+  'Хм, не совсем… подумай ещё 🥺',
+  'Почти! Но моё сердце помнит другую дату 💭',
+  'Не-а! Подсказка: это была осень 🍂',
+  'Всё ещё мимо 🙈 Но я в тебя верю 💗'
+];
+
+function fillDate(){
+  dSel.length = 0; mSel.length = 0; ySel.length = 0;
+  for(let d = 1; d <= 31; d++) dSel.add(new Option(d, d));
+  MONTHS.forEach((name, i) => mSel.add(new Option(name, i + 1)));
+  for(let y = 2022; y <= 2027; y++) ySel.add(new Option(y, y));
+  dSel.value = 1; mSel.value = 1; ySel.value = 2026;
+}
+fillDate();
+
+let wrongTries = 0;
+
+checkBtn.addEventListener('click', () => {
+  const okDate = +dSel.value === SECRET.d &&
+                 +mSel.value === SECRET.m &&
+                 +ySel.value === SECRET.y;
+  if(okDate){
+    gateMsg.textContent = '';
+    const r = checkBtn.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height / 2, 24);
+    gate.classList.remove('on');
+    win.classList.add('on');
+    fitTo(winCard, 16);
+    heartRain();
+    return;
+  }
+  wrongTries++;
+  gateMsg.textContent = WRONG_MSGS[(wrongTries - 1) % WRONG_MSGS.length];
+  if(wrongTries >= 3) gateHint.textContent = 'подсказка: золотая осень… и этот год 🍁✨';
+  gateCard.classList.remove('shake');
+  void gateCard.offsetWidth;
+  gateCard.classList.add('shake');
+});
+
+/* вернуть всё обратно */
+document.getElementById('again').addEventListener('click', () => {
+  win.classList.remove('on');
+  gate.classList.remove('on');
+  gateMsg.textContent = '';
+  gateHint.textContent = '';
+  gateCard.classList.remove('shake');
+  wrongTries = 0;
+  fillDate();
+  attempts = 0; scale = 1; escaped = false;
+  yesBtn.style.setProperty('--scale', 1);
+  yesBtn.style.transform = '';
+  yesBtn.style.opacity = '';
+  noBtn.classList.remove('fixed');
+  noBtn.removeAttribute('style');
+  noSlot.removeAttribute('style');
+  winCard.style.removeProperty('--fit');
+  card.removeAttribute('style');
+  card.style.display = '';
+  fitAll();          /* заново подгоняем под экран и ставим «нет» на место */
+  window.scrollTo(0, 0);
+});
+
+/* первичная подгонка + страховка, если что-то дорисуется позже */
+fitAll();
+window.addEventListener('load', fitAll);
+setTimeout(fitAll, 60);
+setTimeout(fitAll, 400);
+setTimeout(fitAll, 1200);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5139aa60b5d05f7',t:'MTc5MzEyNDA2Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
